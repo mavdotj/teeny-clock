@@ -6,12 +6,30 @@ const ctx = canvas.getContext('2d')!;
 let radius = canvas.height / 2;
 ctx.translate(radius, radius);
 radius = radius * 0.90
-// drawClock();
+
+/**
+ * Returns a point based on a percentage and a radius
+ */
+const p = (percentage: number, radius: number): [number, number] => {
+  let radians = percentage * (Math.PI * 2)
+  return [Math.cos(radians) * radius, Math.sin(radians) * radius]
+}
 
 function drawClock() {
   ctx.arc(0, 0, radius, 0 , 2 * Math.PI);
   ctx.fillStyle = "black";
   ctx.fill();
+
+  // draw notches & numbers
+  for(let i = 0; i < 60; i++) {
+    ctx.beginPath()
+    const isMajorNotch = !(i % 5)
+    ctx.lineWidth = isMajorNotch ? 2.5 : 1.5;
+    ctx.strokeStyle = "white";
+    ctx.moveTo(...p(i / 60, radius))
+    ctx.lineTo(...p(i / 60, radius * 0.9));
+    ctx.stroke();
+  }
 }
 
 type Time = {
@@ -24,11 +42,6 @@ type Time = {
 drawClock()
 
 let currTime: Time;
-
-const p = (percentage: number, radius: number): [number, number] => {
-  let radians = percentage * (Math.PI * 2)
-  return [Math.cos(radians) * radius, Math.sin(radians) * radius]
-}
 
 function draw() {
   ctx.reset()
