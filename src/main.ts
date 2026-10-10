@@ -31,8 +31,7 @@ let playHour = (h: number) => {
 };
 
 let playSoundsoffScreen: boolean = false;
-let prevPlaySoundsoffScreen: boolean = false;
-let offScreenSoundInterval: number;
+let offScreenSoundInterval: number | undefined;
 
 let isOnButton = (e: MouseEvent): boolean => {
   const rect = canvas.getBoundingClientRect();
@@ -51,6 +50,8 @@ let isOnButton = (e: MouseEvent): boolean => {
 canvas.onclick = (e) => {
   if (isOnButton(e)) {
     playSoundsoffScreen = !playSoundsoffScreen;
+    clearInterval(offScreenSoundInterval);
+    if(playSoundsoffScreen) offScreenSoundInterval = setInterval(tick, 250)
   }
 };
 
@@ -74,7 +75,6 @@ type Time = [
   ms: number,
 ];
 
-let prevTime: Time;
 
 let getTime = (): Time => {
   let date = new Date();
@@ -86,42 +86,57 @@ let getTime = (): Time => {
   ];
 };
 
-let prevTime2: Time;
-let playSounds = (time: Time, prevTime: Time, drawing = true) => {
-  // if we are drawing && play sounds off screen is on then we let the interval do the sounds so it doesn't overlap
-  if (drawing && prevPlaySoundsoffScreen && playSoundsoffScreen) return;
-  console.log("running in interval?: ", !drawing);
-  // new second?
-  if (prevTime && [1, -59].includes(time[2] - prevTime?.[2])) {
-    console.log(time, prevTime);
-    if (drawing) {
-      // playsoundsoffscreen was just flipped on
-      if (playSoundsoffScreen == true && prevPlaySoundsoffScreen == false) {
-        offScreenSoundInterval = setInterval(() => {
-          let time = getTime();
-          playSounds(time, prevTime2, false);
-          prevTime2 = time;
-        }, 1000);
-      } // playsoundsoffscreen was just flipped off
-      else if (
-        playSoundsoffScreen == false && prevPlaySoundsoffScreen == true
-      ) {
-        clearInterval(offScreenSoundInterval);
-      }
-      prevPlaySoundsoffScreen = playSoundsoffScreen;
-    }
-    // new hour?
-    if (time[0] != prevTime[0]) {
-      playHour(time[0] % 12);
-    }
-    // new minute?
-    if (time[1] != prevTime[1]) {
-      playSound(600);
-    } else {
-      playSound(440);
-    }
-  }
-};
+// let prevTime: Time;
+// let prevTime2: Time;
+// let playSounds = (time: Time, prevTime: Time, drawing = true) => {
+//   // if we are drawing && play sounds off screen is on then we let the interval do the sounds so it doesn't overlap
+//   if (drawing && prevPlaySoundsoffScreen && playSoundsoffScreen) return;
+//   console.log("running in interval?: ", !drawing);
+//   // new second?
+//   if (prevTime && [1, -59].includes(time[2] - prevTime?.[2])) {
+//     console.log(time, prevTime);
+//     if (drawing) {
+//       // playsoundsoffscreen was just flipped on
+//       if (playSoundsoffScreen == true && prevPlaySoundsoffScreen == false) {
+//         offScreenSoundInterval = setInterval(() => {
+//           let time = getTime();
+//           playSounds(time, prevTime2, false);
+//           prevTime2 = time;
+//         }, 1000);
+//       } // playsoundsoffscreen was just flipped off
+//       else if (
+//         playSoundsoffScreen == false && prevPlaySoundsoffScreen == true
+//       ) {
+//         clearInterval(offScreenSoundInterval);
+//       }
+//       prevPlaySoundsoffScreen = playSoundsoffScreen;
+//     }
+//     // new hour?
+//     if (time[0] != prevTime[0]) {
+//       playHour(time[0] % 12);
+//     }
+//     // new minute?
+//     if (time[1] != prevTime[1]) {
+//       playSound(600);
+//     } else {
+//       playSound(440);
+//     }
+//   }
+// };
+
+let lastTick: Time | null;
+let tick = (time: Time = getTime()) => {
+  const prevTime = lastTick;
+  lastTick = time;
+  // same second: skip
+  if (!prevTime || time[2] === prevTime[2]) return;
+
+  // new hour? play hour sounds
+  if (time[0] !== prevTime[0]) playHour(time[0] % 12 || 12);
+  
+  // new minute? play minute tick; not a new minute? just play second tick
+  playSound(time[1] !== prevTime[1] ? 600 : 440);
+}
 
 let draw = () => {
   ctx.reset();
@@ -152,7 +167,9 @@ let draw = () => {
     ctx.stroke();
   }
   let time = getTime();
-  playSounds(time, prevTime);
+  // playSounds(time, prevTime);
+  // prevTime = time;
+  tick(time);
   let [s, m, h] = [
     // v seconds + v 0.milliseconds divided by 60 seconds in a minute
     (time[2] + (time[3] / 1000)) / 60,
@@ -161,7 +178,6 @@ let draw = () => {
     // v hours divided by 12 hours on a clock (yes the hours value wraps by 24 and not 12 but it's wrapping around a circle anyway so it doesn't matter)
     time[0] / 12,
   ];
-  prevTime = time;
 
   // draw the minute hand
   ctx.beginPath();
@@ -197,7 +213,7 @@ let draw = () => {
     `${(time[0] + "").padStart(2, "0")}:${(time[1] + "").padStart(2, "0")}:${
       (time[2] + "").padStart(2, "0")
     }.${(time[3] + "").padStart(3, "0")} (${time[0] % 12 || 12}${
-      time[0] < 24 ? "PM" : "AM"
+      time[0] < 12 ? "AM" : "PM"
     })`,
     0,
     (canvas.height / 2) - 15,
