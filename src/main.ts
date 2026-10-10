@@ -33,8 +33,7 @@ let playHour = (h: number) => {
  */
 let point = (percentage: number, radius: number): [number, number] => {
   // shift by 1 quarter (90 degrees) counter-clockwise so that 0deg is on the top and not on the right
-  percentage -= 0.25;
-  let radians = percentage * (Math.PI * 2);
+  let radians = (percentage - 0.25) * Math.PI * 2;
   return [Math.cos(radians) * radius, Math.sin(radians) * radius];
 };
 
@@ -57,13 +56,13 @@ let draw = () => {
   // draw notches & numbers
   for (let i = 0; i < 60; i++) {
     ctx.beginPath();
-    let isMajorNotch = !(i % 5);
-    ctx.lineWidth = isMajorNotch ? 2.5 : 1.5;
+    let isHour = !(i % 5);
+    ctx.lineWidth = isHour ? 2.5 : 1.5;
     ctx.strokeStyle = "white";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    isMajorNotch && ctx.fillText(
+    isHour && ctx.fillText(
       // @ts-expect-error: it saves bytes to not explicitly stringify this
       (i / 5) || 12,
       ...point(i / 60, radius * 0.8),
@@ -135,9 +134,9 @@ let draw = () => {
   ctx.fillText(
     `${(time[0] + "").padStart(2, "0")}:${(time[1] + "").padStart(2, "0")}:${
       (time[2] + "").padStart(2, "0")
-    }.${(time[3] + "").padStart(3, "0")} (${time[0] % 12}${
+    }.${(time[3] + "").padStart(3, "0")} (${time[0] % 12 || 12}${
       time[0] < 24 ? "PM" : "AM"
-    }) `,
+    })`,
     0,
     (canvas.height / 2) - 15,
   );

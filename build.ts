@@ -14,8 +14,8 @@ function glsl(code: string) {
     .trim();
 }
 
-// modified here: replace unneeded attributes
-src = src.replace(`<script type="module" crossorigin>`, '<script>')
+// modified here: replace unneeded crossorigin attribute
+src = src.replace(` crossorigin`, '')
 
 let html = "";
 for (const part of src.split(/(<script>[\s\S]*?<\/script>|<style>[\s\S]*?<\/style>)/)) {
