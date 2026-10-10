@@ -1,14 +1,14 @@
 const canvas = document.getElementById("clock") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 
-let radius = canvas.height / 2 * 0.90;
+let radius = canvas.height / 2 * 0.80;
 let audioContext = new AudioContext();
-let osc = audioContext.createOscillator();
-let gain = audioContext.createGain();
 
 let playSound = (
   freq: number,
   time: number = 0.05,
+  osc = audioContext.createOscillator(),
+  gain = audioContext.createGain(),
 ) => {
   osc.connect(gain);
   osc.frequency.setValueAtTime(freq, audioContext.currentTime);
@@ -91,7 +91,7 @@ let draw = () => {
   if (prevTime && [1, -59].includes(time[2] - prevTime?.[2])) {
     // new hour?
     if (time[0] != prevTime[0]) {
-      playHour(time[0]);
+      playHour(time[0] % 12);
     }
     // new minute?
     if (time[1] != prevTime[1]) {
@@ -138,6 +138,22 @@ let draw = () => {
   ctx.lineTo(...point(h, radius / 1.5));
   ctx.stroke();
 
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "black";
+  ctx.font = "40px sans-serif";
+  ctx.moveTo(40, 0);
+
+  ctx.fillText(
+    `${(time[0] + "").padStart(2, "0")}:${(time[1] + "").padStart(2, "0")}:${
+      (time[2] + "").padStart(2, "0")
+    }.${(time[3] + "").padStart(3, "0")} (${time[0] % 12}${
+      time[0] < 24 ? "PM" : "AM"
+    }) `,
+    0,
+    (canvas.height / 2) - 15,
+  );
+
   requestAnimationFrame(draw);
-}
+};
 draw();
