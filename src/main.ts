@@ -165,7 +165,7 @@ let draw = () => {
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillStyle = "black";
+  ctx.fillStyle = "grey";
   ctx.font = "32px sans-serif";
   ctx.moveTo(40, 0);
 
