@@ -68,18 +68,30 @@ function draw() {
     // v hours divided by 12 hours on a clock (yes the hours value wraps by 24 and not 12 but it's wrapping around a circle anyway so it doesn't matter)
     time[0] / 12,
   ];
-  // new hour?
-  if (currTime && (time[0] - currTime[0] == 1)) {
-    playHour(time[0]);
-  }
-  // new minute?
-  if (currTime && (time[1] - currTime[1] == 1)) {
-    playSound(600);
-  }
   // new second?
-  if (currTime && (time[2] - currTime[2] == 1)) {
-    playSound(440);
+  if(currTime && time[2] - currTime?.[2] == 1) {
+    // new hour?
+    if(time[0] != currTime[0]) {
+      playHour(time[0])
+    }
+    // new minute?
+    if(time[1] != currTime[1]) {
+      playSound(600)
+    }
+    playSound(440)
   }
+  // // new hour?
+  // if (currTime && isNewSecond && time[0] != currTime[0]) {
+  //   playHour(time[0]);
+  // }
+  // // new minute?
+  // if (currTime && isNewSecond && time[1] != currTime[1]) {
+  //   playSound(600);
+  // }
+  // // new second?
+  // if (currTime && isNewSecond) {
+  //   playSound(440);
+  // }
   currTime = time;
 
   // draw the minute hand
