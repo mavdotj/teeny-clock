@@ -86,44 +86,6 @@ let getTime = (): Time => {
   ];
 };
 
-// let prevTime: Time;
-// let prevTime2: Time;
-// let playSounds = (time: Time, prevTime: Time, drawing = true) => {
-//   // if we are drawing && play sounds off screen is on then we let the interval do the sounds so it doesn't overlap
-//   if (drawing && prevPlaySoundsoffScreen && playSoundsoffScreen) return;
-//   console.log("running in interval?: ", !drawing);
-//   // new second?
-//   if (prevTime && [1, -59].includes(time[2] - prevTime?.[2])) {
-//     console.log(time, prevTime);
-//     if (drawing) {
-//       // playsoundsoffscreen was just flipped on
-//       if (playSoundsoffScreen == true && prevPlaySoundsoffScreen == false) {
-//         offScreenSoundInterval = setInterval(() => {
-//           let time = getTime();
-//           playSounds(time, prevTime2, false);
-//           prevTime2 = time;
-//         }, 1000);
-//       } // playsoundsoffscreen was just flipped off
-//       else if (
-//         playSoundsoffScreen == false && prevPlaySoundsoffScreen == true
-//       ) {
-//         clearInterval(offScreenSoundInterval);
-//       }
-//       prevPlaySoundsoffScreen = playSoundsoffScreen;
-//     }
-//     // new hour?
-//     if (time[0] != prevTime[0]) {
-//       playHour(time[0] % 12);
-//     }
-//     // new minute?
-//     if (time[1] != prevTime[1]) {
-//       playSound(600);
-//     } else {
-//       playSound(440);
-//     }
-//   }
-// };
-
 let lastTick: Time | null;
 let tick = (time: Time = getTime()) => {
   const prevTime = lastTick;
@@ -233,7 +195,6 @@ let draw = () => {
   ctx.textBaseline = "middle";
   ctx.fillStyle = playSoundsoffScreen ? "white" : "black";
   ctx.font = "12px sans-serif";
-  // ctx.moveTo(-(canvas.width / 2) + 15 + (buttonSize / 2), -(canvas.height / 2) + 15 + (buttonSize / 2));
   ctx.fillText(
     "play sounds offscren?",
     -(canvas.width / 2) + buttonPadding + (buttonSize / 2),
