@@ -57,7 +57,7 @@ function draw() {
     ctx.lineWidth = isMajorNotch ? 2.5 : 1.5;
     ctx.strokeStyle = "white";
     ctx.fillStyle = "white";
-    isMajorNotch && ctx.fillText((i / 5), ...point(i / 60, radius * 0.8));
+    isMajorNotch && ctx.fillText((i / 5) || 12, ...point(i / 60, radius * 0.8));
     ctx.moveTo(...point(i / 60, radius));
     ctx.lineTo(...point(i / 60, radius * 0.9));
     ctx.stroke();
