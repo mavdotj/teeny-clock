@@ -69,15 +69,15 @@ function draw() {
     time[0] / 12,
   ];
   // new hour?
-  if (currTime && currTime[0] != time[0]) {
+  if (currTime && (time[0] - currTime[0] == 1)) {
     playHour(time[0]);
   }
   // new minute?
-  if (currTime && currTime[1] != time[1]) {
+  if (currTime && (time[1] - currTime[1] == 1)) {
     playSound(600);
   }
   // new second?
-  if (currTime && currTime[2] != time[2]) {
+  if (currTime && (time[2] - currTime[2] == 1)) {
     playSound(440);
   }
   currTime = time;
@@ -105,8 +105,6 @@ function draw() {
   ctx.moveTo(0, 0);
   ctx.lineTo(...point(h, radius / 1.5));
   ctx.stroke();
-
-  console.log(h, m, s);
 
   requestAnimationFrame(draw);
 }
