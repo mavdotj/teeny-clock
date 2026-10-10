@@ -129,8 +129,6 @@ let draw = () => {
     ctx.stroke();
   }
   let time = getTime();
-  // playSounds(time, prevTime);
-  // prevTime = time;
   tick(time);
   let [s, m, h] = [
     // v seconds + v 0.milliseconds divided by 60 seconds in a minute
