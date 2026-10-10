@@ -3,6 +3,8 @@ const ctx = canvas.getContext("2d")!;
 
 let radius = canvas.height / 2 * 0.80;
 let audioContext = new AudioContext();
+let buttonSize = 70;
+let buttonPadding = 15;
 
 let playSound = (
   freq: number,
@@ -28,6 +30,34 @@ let playHour = (h: number) => {
   if (h) setTimeout(() => playHour(h), 1000);
 };
 
+let playSoundsoffScreen: boolean = false;
+let prevPlaySoundsoffScreen: boolean = false;
+let offScreenSoundInterval: number;
+
+let isOnButton = (e: MouseEvent): boolean => {
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvas.width / rect.width) -
+    (canvas.width / 2);
+  const y = (e.clientY - rect.top) * (canvas.height / rect.height) -
+    (canvas.height / 2);
+  return (
+    x > -(canvas.width / 2) + buttonPadding &&
+    x < -(canvas.width / 2) + buttonPadding + buttonSize &&
+    y > -(canvas.height / 2) + buttonPadding &&
+    y < -(canvas.height / 2) + buttonPadding + buttonSize
+  );
+};
+
+canvas.onclick = (e) => {
+  if (isOnButton(e)) {
+    playSoundsoffScreen = !playSoundsoffScreen;
+  }
+};
+
+canvas.onmousemove = (e) => {
+  canvas.style.cursor = isOnButton(e) ? "pointer" : "default";
+};
+
 /**
  * Returns a point based on a percentage and a radius
  */
@@ -46,48 +76,40 @@ type Time = [
 
 let prevTime: Time;
 
-let draw = () => {
-  ctx.reset();
-  ctx.translate(canvas.height / 2, canvas.height / 2);
-  ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = "black";
-  ctx.fill();
-
-  // draw notches & numbers
-  for (let i = 0; i < 60; i++) {
-    ctx.beginPath();
-    let isHour = !(i % 5);
-    ctx.lineWidth = isHour ? 2.5 : 1.5;
-    ctx.strokeStyle = "white";
-    ctx.fillStyle = "white";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    isHour && ctx.fillText(
-      // @ts-expect-error: it saves bytes to not explicitly stringify this
-      (i / 5) || 12,
-      ...point(i / 60, radius * 0.8),
-    );
-    ctx.moveTo(...point(i / 60, radius));
-    ctx.lineTo(...point(i / 60, radius * 0.9));
-    ctx.stroke();
-  }
+let getTime = (): Time => {
   let date = new Date();
-  let time: Time = [
+  return [
     date.getHours(),
     date.getMinutes(),
     date.getSeconds(),
     date.getMilliseconds(),
   ];
-  let [s, m, h] = [
-    // v seconds + v 0.milliseconds divided by 60 seconds in a minute
-    (time[2] + (time[3] / 1000)) / 60,
-    // v minutes divided by 60 minutes in an hour
-    time[1] / 60,
-    // v hours divided by 12 hours on a clock (yes the hours value wraps by 24 and not 12 but it's wrapping around a circle anyway so it doesn't matter)
-    time[0] / 12,
-  ];
+};
+
+let prevTime2: Time;
+let playSounds = (time: Time, prevTime: Time, drawing = true) => {
+  // if we are drawing && play sounds off screen is on then we let the interval do the sounds so it doesn't overlap
+  if (drawing && prevPlaySoundsoffScreen && playSoundsoffScreen) return;
+  console.log("running in interval?: ", !drawing);
   // new second?
   if (prevTime && [1, -59].includes(time[2] - prevTime?.[2])) {
+    console.log(time, prevTime);
+    if (drawing) {
+      // playsoundsoffscreen was just flipped on
+      if (playSoundsoffScreen == true && prevPlaySoundsoffScreen == false) {
+        offScreenSoundInterval = setInterval(() => {
+          let time = getTime();
+          playSounds(time, prevTime2, false);
+          prevTime2 = time;
+        }, 1000);
+      } // playsoundsoffscreen was just flipped off
+      else if (
+        playSoundsoffScreen == false && prevPlaySoundsoffScreen == true
+      ) {
+        clearInterval(offScreenSoundInterval);
+      }
+      prevPlaySoundsoffScreen = playSoundsoffScreen;
+    }
     // new hour?
     if (time[0] != prevTime[0]) {
       playHour(time[0] % 12);
@@ -99,6 +121,46 @@ let draw = () => {
       playSound(440);
     }
   }
+};
+
+let draw = () => {
+  ctx.reset();
+  ctx.translate(canvas.height / 2, canvas.height / 2);
+  ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+  ctx.fillStyle = "black";
+  ctx.fill();
+
+  // draw notches & numbers
+  for (let i = 0; i < 60; i++) {
+    ctx.beginPath();
+    ctx.strokeStyle = "white";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "15px sans-serif";
+    let isHour = !(i % 5);
+    ctx.lineWidth = isHour ? 2.5 : 1.5;
+    if (isHour) {
+      ctx.fillText(
+        // @ts-expect-error: it saves bytes to not explicitly stringify this
+        (i / 5) || 12,
+        ...point(i / 60, radius * 0.8),
+      );
+    }
+    ctx.moveTo(...point(i / 60, radius));
+    ctx.lineTo(...point(i / 60, radius * 0.9));
+    ctx.stroke();
+  }
+  let time = getTime();
+  playSounds(time, prevTime);
+  let [s, m, h] = [
+    // v seconds + v 0.milliseconds divided by 60 seconds in a minute
+    (time[2] + (time[3] / 1000)) / 60,
+    // v minutes divided by 60 minutes in an hour
+    time[1] / 60,
+    // v hours divided by 12 hours on a clock (yes the hours value wraps by 24 and not 12 but it's wrapping around a circle anyway so it doesn't matter)
+    time[0] / 12,
+  ];
   prevTime = time;
 
   // draw the minute hand
@@ -128,7 +190,7 @@ let draw = () => {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = "black";
-  ctx.font = "40px sans-serif";
+  ctx.font = "32px sans-serif";
   ctx.moveTo(40, 0);
 
   ctx.fillText(
@@ -139,6 +201,28 @@ let draw = () => {
     })`,
     0,
     (canvas.height / 2) - 15,
+  );
+
+  ctx.beginPath();
+  ctx.fillStyle = playSoundsoffScreen ? "green" : "red";
+  ctx.fillRect(
+    -(canvas.width / 2) + buttonPadding,
+    -(canvas.height / 2) + buttonPadding,
+    buttonSize,
+    buttonSize,
+  );
+  ctx.fill();
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = playSoundsoffScreen ? "white" : "black";
+  ctx.font = "12px sans-serif";
+  // ctx.moveTo(-(canvas.width / 2) + 15 + (buttonSize / 2), -(canvas.height / 2) + 15 + (buttonSize / 2));
+  ctx.fillText(
+    "play sounds offscren?",
+    -(canvas.width / 2) + buttonPadding + (buttonSize / 2),
+    -(canvas.height / 2) + buttonPadding + (buttonSize / 2),
+    buttonSize,
   );
 
   requestAnimationFrame(draw);
