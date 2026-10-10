@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { minify } from "terser";
 
 const LIMIT = 3072;
-const src = readFileSync("dist/index.html", "utf8");
+let src = readFileSync("dist/index.html", "utf8");
 
 // Squeeze whitespace in shaders written as glsl`...` (terser leaves strings alone).
 function glsl(code: string) {
@@ -15,7 +15,7 @@ function glsl(code: string) {
 }
 
 // modified here: replace unneeded attributes
-src.replace(`<script type="module" crossorigin>`, '<script>')
+src = src.replace(`<script type="module" crossorigin>`, '<script>')
 
 let html = "";
 for (const part of src.split(/(<script>[\s\S]*?<\/script>|<style>[\s\S]*?<\/style>)/)) {
