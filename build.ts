@@ -14,6 +14,9 @@ function glsl(code: string) {
     .trim();
 }
 
+// modified here: replace unneeded attributes
+src.replace(`<script type="module" crossorigin>`, '<script>')
+
 let html = "";
 for (const part of src.split(/(<script>[\s\S]*?<\/script>|<style>[\s\S]*?<\/style>)/)) {
   if (part.startsWith("<script>")) {
