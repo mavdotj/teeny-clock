@@ -100,23 +100,11 @@ let draw = () => {
       playSound(440);
     }
   }
-  // // new hour?
-  // if (currTime && isNewSecond && time[0] != currTime[0]) {
-  //   playHour(time[0]);
-  // }
-  // // new minute?
-  // if (currTime && isNewSecond && time[1] != currTime[1]) {
-  //   playSound(600);
-  // }
-  // // new second?
-  // if (currTime && isNewSecond) {
-  //   playSound(440);
-  // }
   prevTime = time;
 
   // draw the minute hand
   ctx.beginPath();
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 4;
   ctx.strokeStyle = "white";
   ctx.moveTo(0, 0);
   ctx.lineTo(...point(m, radius / 2.7));
