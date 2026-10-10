@@ -2,21 +2,24 @@ const canvas = document.getElementById("clock") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d")!;
 
 let radius = canvas.height / 2 * 0.90;
+let audioContext = new AudioContext();
+let osc = audioContext.createOscillator();
+let gain = audioContext.createGain();
 
 let playSound = (
   freq: number,
   time: number = 0.05,
-  ctx = new AudioContext(),
-  osc = ctx.createOscillator(),
-  gain = ctx.createGain(),
 ) => {
   osc.connect(gain);
-  osc.frequency.setValueAtTime(freq, ctx.currentTime);
-  gain.connect(ctx.destination);
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time);
+  osc.frequency.setValueAtTime(freq, audioContext.currentTime);
+  gain.connect(audioContext.destination);
+  gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    audioContext.currentTime + time,
+  );
   osc.start();
-  osc.stop(ctx.currentTime + time);
+  osc.stop(audioContext.currentTime + time);
 };
 
 let playHour = (h: number) => {
@@ -29,6 +32,7 @@ let playHour = (h: number) => {
  * Returns a point based on a percentage and a radius
  */
 let point = (percentage: number, radius: number): [number, number] => {
+  // shift by 1 quarter (90 degrees) counter-clockwise so that 0deg is on the top and not on the right
   percentage -= 0.25;
   let radians = percentage * (Math.PI * 2);
   return [Math.cos(radians) * radius, Math.sin(radians) * radius];
@@ -41,9 +45,9 @@ type Time = [
   ms: number,
 ];
 
-let currTime: Time;
+let prevTime: Time;
 
-function draw() {
+let draw = () => {
   ctx.reset();
   ctx.translate(canvas.height / 2, canvas.height / 2);
   ctx.arc(0, 0, radius, 0, 2 * Math.PI);
@@ -57,7 +61,13 @@ function draw() {
     ctx.lineWidth = isMajorNotch ? 2.5 : 1.5;
     ctx.strokeStyle = "white";
     ctx.fillStyle = "white";
-    isMajorNotch && ctx.fillText((i / 5) || 12, ...point(i / 60, radius * 0.8));
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    isMajorNotch && ctx.fillText(
+      // @ts-expect-error: it saves bytes to not explicitly stringify this
+      (i / 5) || 12,
+      ...point(i / 60, radius * 0.8),
+    );
     ctx.moveTo(...point(i / 60, radius));
     ctx.lineTo(...point(i / 60, radius * 0.9));
     ctx.stroke();
@@ -78,16 +88,17 @@ function draw() {
     time[0] / 12,
   ];
   // new second?
-  if (currTime && time[2] - currTime?.[2] == 1) {
+  if (prevTime && [1, -59].includes(time[2] - prevTime?.[2])) {
     // new hour?
-    if (time[0] != currTime[0]) {
+    if (time[0] != prevTime[0]) {
       playHour(time[0]);
     }
     // new minute?
-    if (time[1] != currTime[1]) {
+    if (time[1] != prevTime[1]) {
       playSound(600);
+    } else {
+      playSound(440);
     }
-    playSound(440);
   }
   // // new hour?
   // if (currTime && isNewSecond && time[0] != currTime[0]) {
@@ -101,7 +112,7 @@ function draw() {
   // if (currTime && isNewSecond) {
   //   playSound(440);
   // }
-  currTime = time;
+  prevTime = time;
 
   // draw the minute hand
   ctx.beginPath();
@@ -129,5 +140,4 @@ function draw() {
 
   requestAnimationFrame(draw);
 }
-
 draw();
